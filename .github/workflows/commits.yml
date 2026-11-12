@@ -1,0 +1,36 @@
+name: Simple commit on main with timestamp
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # cada 30 minutos
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  commit-date:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (permite repos vacíos)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Configurar git user
+        run: |
+          git config user.name "JeremyAQN"
+          git config user.email "quispeneyrajeremy@gmail.com"
+
+      - name: Crear/actualizar archivo con fecha
+        run: |
+          echo "$(date -u +"%Y-%m-%d %H:%M:%S") JeremyAQN" >> commits.txt
+
+      - name: Commit y push directo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add commits.txt
+          git commit -m "ci: update log [skip ci]" || echo "Nada que commitear"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" main
